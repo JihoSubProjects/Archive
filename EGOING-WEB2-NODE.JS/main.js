@@ -95,10 +95,14 @@ var app = http.createServer(function(request, response) {
 
             var title = post.title;
             var description = post.description;
-        })
 
-        response.writeHead(200);
-        response.end('success');
+            // POST 방식으로 받은 데이터를 파일로 저장
+            fs.writeFile(`data/${title}`, description, 'utf8', function(err) {
+                // 리다이렉션 처리
+                response.writeHead(302, {Location: `/?id=${title}`});
+                response.end('success');
+            });
+        })
     } else {
         response.writeHead(404); // 파일 찾기 실패함
         response.end('Not found');
