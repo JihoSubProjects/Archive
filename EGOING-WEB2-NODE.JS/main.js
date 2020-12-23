@@ -1,6 +1,7 @@
 var http = require('http');
 var fs = require('fs');
 var url = require('url');
+var qs = require('querystring');
 
 function templateHTML(title, list, body) {
     return `
@@ -78,6 +79,26 @@ var app = http.createServer(function(request, response) {
             response.writeHead(200);
             response.end(template);
         });
+    } else if (pathname === '/process_create') {
+        var body = '';
+
+        // Event
+        request.on('data', function(data) {
+            // 대용량의 데이터를 POST 방식으로 받게 되면 서버에 무리가 될 수 있음
+            // 따라서, 일정 데이터만큼 잘라서 받아내는 과정
+            body = body + data;
+        });
+        request.on('end', function() {
+            // 정보 수신이 끝났을 경우
+            var post = qs.parse(body);
+            // console.log(post);
+
+            var title = post.title;
+            var description = post.description;
+        })
+
+        response.writeHead(200);
+        response.end('success');
     } else {
         response.writeHead(404); // 파일 찾기 실패함
         response.end('Not found');
