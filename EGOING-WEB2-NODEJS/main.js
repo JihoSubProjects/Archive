@@ -2,6 +2,7 @@ var http = require('http');
 var fs = require('fs');
 var url = require('url');
 var qs = require('querystring');
+var path = require('path')
 
 var template = require('./lib/template.js');
 
@@ -33,7 +34,9 @@ var app = http.createServer(function(request, response) {
             });
         } else {
             fs.readdir('./data', function(err, filelist) {
-                fs.readFile(`data/${queryData.id}`, 'utf8', function(err, descrption) {
+                var filteredId = path.parse(queryData.id).base;
+
+                fs.readFile(`data/${filteredId}`, 'utf8', function(err, descrption) {
                     var title = queryData.id;
                     var list = template.list(filelist);
                     var html = template.html(title, list,
@@ -94,7 +97,9 @@ var app = http.createServer(function(request, response) {
         })
     } else if(pathname === '/update') {
         fs.readdir('./data', function(err, filelist) {
-            fs.readFile(`data/${queryData.id}`, 'utf8', function(err, descrption) {
+            var filteredId = path.parse(queryData.id).base;
+
+            fs.readFile(`data/${filteredId}`, 'utf8', function(err, descrption) {
                 var title = queryData.id;
                 var list = template.list(filelist);
                 var html = template.html(title, list, `
@@ -142,9 +147,10 @@ var app = http.createServer(function(request, response) {
             var post = qs.parse(body);
             
             var id = post.id; // hidden으로 받은 문서 제목
+            var filteredId = path.parse(id).base;
             
             // unlink(path, callback) -> 파일 삭제
-            fs.unlink(`data/${id}`, function(error) {
+            fs.unlink(`data/${filteredId}`, function(error) {
                 // 리다이렉션 처리 -> 삭제를 했으니 홈으로 보내자
                 response.writeHead(302, {Location: `/`});
                 response.end();
