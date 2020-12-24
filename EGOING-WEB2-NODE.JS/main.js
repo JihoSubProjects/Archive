@@ -74,7 +74,7 @@ var app = http.createServer(function(request, response) {
             var title = 'WEB - create';
             var list = templateList(filelist);
             var template = templateHTML(title, list, `
-            <form action="http://localhost:3000/process_create" method="POST">
+            <form action="/process_create" method="POST">
                 <p><input type="text" name="title" placeholder="title"></p>
                 <p><textarea name="description" placeholder="description"></textarea></p>
                 <p><input type="submit"></p>
@@ -108,6 +108,24 @@ var app = http.createServer(function(request, response) {
                 response.end('success');
             });
         })
+    } else if(pathname === '/update') {
+        fs.readdir('./data', function(err, filelist) {
+            fs.readFile(`data/${queryData.id}`, 'utf8', function(err, descrption) {
+                var title = queryData.id;
+                var list = templateList(filelist);
+                var template = templateHTML(title, list, `
+                    <form action="/process_update" method="POST">
+                        <input type="hidden" name="id" value="${title}">
+                        <p><input type="text" name="title" placeholder="title" value="${title}"></p>
+                        <p><textarea name="description" placeholder="description">${descrption}</textarea></p>
+                        <p><input type="submit"></p>
+                    </form>`,
+                    `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`);
+        
+                response.writeHead(200);
+                response.end(template);
+            });
+        });
     } else {
         response.writeHead(404); // 파일 찾기 실패함
         response.end('Not found');
