@@ -121,11 +121,35 @@ var app = http.createServer(function(request, response) {
                         <p><input type="submit"></p>
                     </form>`,
                     `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`);
+                    {/* <input type="hidden" name="id" value="${title}">
+                        제목을 수정할 경우 기존 제목을 알아야 하므로 hidden으로 넘겨준다. */}
         
                 response.writeHead(200);
                 response.end(template);
             });
         });
+    } else if (pathname === '/process_update') {
+        var body = '';
+
+        request.on('data', function(data) {
+            body = body + data;
+        });
+        request.on('end', function() {
+            var post = qs.parse(body);
+            
+            var id = post.id; // hidden으로 받은 기존 문서 제목
+            var title = post.title;
+            var description = post.description;
+
+            // 파일 이름명 변경 함수 rename(oldPath, newPath, callback)
+            fs.rename(`data/${id}`, `data/${title}`, function(error) {
+                fs.writeFile(`data/${title}`, description, 'utf8', function(err) {
+                    // 리다이렉션 처리
+                    response.writeHead(302, {Location: `/?id=${title}`});
+                    response.end('success');
+                });
+            });
+        })
     } else {
         response.writeHead(404); // 파일 찾기 실패함
         response.end('Not found');
