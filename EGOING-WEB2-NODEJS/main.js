@@ -61,7 +61,14 @@ var app = http.createServer(function(request, response) {
                     var list = templateList(filelist);
                     var template = templateHTML(title, list,
                         `<h2>${title}</h2><p>${descrption}</p>`,
-                        `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`);
+                        `<a href="/create">create</a>
+                        <a href="/update?id=${title}">update</a>
+                        <form action="process_delete" method="POST">
+                            <input type="hidden" name="id" value="${title}">
+                            <input type="submit" value="delete">
+                        </form>`);
+                        /* <a href="/delete?id=${title}">delete</a> 
+                            위처럼 사용하면 GET방식이므로 form으로 만들어서 안전하게 사용한다.*/
             
                     response.writeHead(200); // 파일은 성공적으로 찾음
                     response.end(template);
@@ -149,6 +156,24 @@ var app = http.createServer(function(request, response) {
                     response.end('success');
                 });
             });
+        })
+    } else if (pathname === '/process_delete') {
+        var body = '';
+
+        request.on('data', function(data) {
+            body = body + data;
+        });
+        request.on('end', function() {
+            var post = qs.parse(body);
+            
+            var id = post.id; // hidden으로 받은 문서 제목
+            
+            // unlink(path, callback) -> 파일 삭제
+            fs.unlink(`data/${id}`, function(error) {
+                // 리다이렉션 처리 -> 삭제를 했으니 홈으로 보내자
+                response.writeHead(302, {Location: `/`});
+                response.end();
+            })
         })
     } else {
         response.writeHead(404); // 파일 찾기 실패함
