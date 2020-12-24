@@ -3,35 +3,36 @@ var fs = require('fs');
 var url = require('url');
 var qs = require('querystring');
 
-function templateHTML(title, list, body, control) {
-    return `
-    <!doctype html>
-    <html>
-    <head>
-        <title>WEB1 - ${title}</title>
-        <meta charset="utf-8">
-    </head>
-    <body>
-        <h1><a href="/">WEB</a></h1>
-        ${list}
-        ${control}
-        ${body}
-    </body>
-    </html>
-    `
-    // <a href="/create">create</a> <a href="/update">update</a> -> control
-}
-
-function templateList(filelist) {
-    var list = '<ul>';
-    var i = 0;
-    while (i < filelist.length) {
-        list = list + `<li><a href="/?id=${filelist[i]}">${filelist[i]}</a></li>`;
-        i = i + 1;
+// refactoring : 동작방식은 그대로 유지하면서, 내부의 코드를 더 효율적으로 바꾸는 행위
+var template = {
+    html: function(title, list, body, control) {
+        return `
+        <!doctype html>
+        <html>
+        <head>
+            <title>WEB1 - ${title}</title>
+            <meta charset="utf-8">
+        </head>
+        <body>
+            <h1><a href="/">WEB</a></h1>
+            ${list}
+            ${control}
+            ${body}
+        </body>
+        </html>
+        `
+        // <a href="/create">create</a> <a href="/update">update</a> -> control
+    }, list: function(filelist) {
+        var list = '<ul>';
+        var i = 0;
+        while (i < filelist.length) {
+            list = list + `<li><a href="/?id=${filelist[i]}">${filelist[i]}</a></li>`;
+            i = i + 1;
+        }
+        list = list + '</ul>';
+    
+        return list;
     }
-    list = list + '</ul>';
-
-    return list;
 }
 
 var app = http.createServer(function(request, response) {
@@ -46,20 +47,25 @@ var app = http.createServer(function(request, response) {
                 // console.log(filelist);
                 var title = 'Welcome';
                 var descrption = 'Hello, Node.js';
-                var list = templateList(filelist);
-                var template = templateHTML(title, list,
+                var list = template.list(filelist);
+                var html = template.html(title, list,
                     `<h2>${title}</h2><p>${descrption}</p>`,
                     `<a href="/create">create</a>`);
+
+                /* var list = templateList(filelist);
+                var template = templateHTML(title, list,
+                    `<h2>${title}</h2><p>${descrption}</p>`,
+                    `<a href="/create">create</a>`); */
         
                 response.writeHead(200);
-                response.end(template);
+                response.end(html);
             });
         } else {
             fs.readdir('./data', function(err, filelist) {
                 fs.readFile(`data/${queryData.id}`, 'utf8', function(err, descrption) {
                     var title = queryData.id;
-                    var list = templateList(filelist);
-                    var template = templateHTML(title, list,
+                    var list = template.list(filelist);
+                    var html = template.html(title, list,
                         `<h2>${title}</h2><p>${descrption}</p>`,
                         `<a href="/create">create</a>
                         <a href="/update?id=${title}">update</a>
@@ -71,7 +77,7 @@ var app = http.createServer(function(request, response) {
                             위처럼 사용하면 GET방식이므로 form으로 만들어서 안전하게 사용한다.*/
             
                     response.writeHead(200); // 파일은 성공적으로 찾음
-                    response.end(template);
+                    response.end(html);
                 });
             });
         }
@@ -79,8 +85,8 @@ var app = http.createServer(function(request, response) {
         fs.readdir('./data', function(err, filelist) {
             // console.log(filelist);
             var title = 'WEB - create';
-            var list = templateList(filelist);
-            var template = templateHTML(title, list, `
+            var list = template.list(filelist);
+            var html = template.html(title, list, `
             <form action="/process_create" method="POST">
                 <p><input type="text" name="title" placeholder="title"></p>
                 <p><textarea name="description" placeholder="description"></textarea></p>
@@ -89,7 +95,7 @@ var app = http.createServer(function(request, response) {
             `, '');
     
             response.writeHead(200);
-            response.end(template);
+            response.end(html);
         });
     } else if (pathname === '/process_create') {
         var body = '';
@@ -119,8 +125,8 @@ var app = http.createServer(function(request, response) {
         fs.readdir('./data', function(err, filelist) {
             fs.readFile(`data/${queryData.id}`, 'utf8', function(err, descrption) {
                 var title = queryData.id;
-                var list = templateList(filelist);
-                var template = templateHTML(title, list, `
+                var list = template.list(filelist);
+                var html = template.html(title, list, `
                     <form action="/process_update" method="POST">
                         <input type="hidden" name="id" value="${title}">
                         <p><input type="text" name="title" placeholder="title" value="${title}"></p>
@@ -128,11 +134,9 @@ var app = http.createServer(function(request, response) {
                         <p><input type="submit"></p>
                     </form>`,
                     `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`);
-                    {/* <input type="hidden" name="id" value="${title}">
-                        제목을 수정할 경우 기존 제목을 알아야 하므로 hidden으로 넘겨준다. */}
         
                 response.writeHead(200);
-                response.end(template);
+                response.end(html);
             });
         });
     } else if (pathname === '/process_update') {
