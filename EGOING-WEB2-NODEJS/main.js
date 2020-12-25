@@ -5,6 +5,7 @@ var qs = require('querystring');
 var path = require('path')
 
 var template = require('./lib/template.js');
+var sanitizeHtml = require('sanitize-html'); // https://www.npmjs.com/package/sanitize-html
 
 // refactoring : 동작방식은 그대로 유지하면서, 내부의 코드를 더 효율적으로 바꾸는 행위
 var app = http.createServer(function(request, response) {
@@ -38,13 +39,19 @@ var app = http.createServer(function(request, response) {
 
                 fs.readFile(`data/${filteredId}`, 'utf8', function(err, descrption) {
                     var title = queryData.id;
+
+                    var sanitizedTitle = sanitizeHtml(title);
+                    var sanirizedDescription = sanitizeHtml(descrption, {
+                        allowedTags: ['h1'] // 본문에서 <h1> 태그는 허용
+                    });
+
                     var list = template.list(filelist);
                     var html = template.html(title, list,
-                        `<h2>${title}</h2><p>${descrption}</p>`,
+                        `<h2>${sanitizedTitle}</h2><p>${sanirizedDescription}</p>`,
                         `<a href="/create">create</a>
-                        <a href="/update?id=${title}">update</a>
+                        <a href="/update?id=${sanitizedTitle}">update</a>
                         <form action="process_delete" method="POST">
-                            <input type="hidden" name="id" value="${title}">
+                            <input type="hidden" name="id" value="${sanitizedTitle}">
                             <input type="submit" value="delete">
                         </form>`);
                         /* <a href="/delete?id=${title}">delete</a> 
