@@ -39,8 +39,7 @@ var app = http.createServer(function(request,response){
 
                 db.query(`SELECT * FROM topic LEFT JOIN author ON topic.author_id = author.id WHERE topic.id=?`, [queryData.id], function(error2, topic) {
                     if (error2) throw error2;
-
-                    console.log(topic);
+                    // console.log(topic);
 
                     var title = topic[0].title;
                     var description = topic[0].description;
@@ -63,18 +62,23 @@ var app = http.createServer(function(request,response){
         db.query(`SELECT * FROM topic`, function(error, topics) {
             if (error) throw error;
 
-            var title = 'Create';
-            var list = template.list(topics);
-            var html = template.HTML(title, list, `
-                <form action="/create_process" method="post">
-                    <p><input type="text" name="title" placeholder="title"></p>
-                    <p><textarea name="description" placeholder="description"></textarea></p>
-                    <p><input type="submit"></p>
-                </form>`,
-                '<a href="/create">create</a>');
+            db.query('SELECT * FROM author', function(error2, authors) {
+                if (error2) throw error2;
 
-            response.writeHead(200);
-            response.end(html);
+                var title = 'Create';
+                var list = template.list(topics);
+                var html = template.HTML(title, list, `
+                    <form action="/create_process" method="post">
+                        <p><input type="text" name="title" placeholder="title"></p>
+                        <p><textarea name="description" placeholder="description"></textarea></p>
+                        <p>${template.authorSelect(authors)}</p>
+                        <p><input type="submit"></p>
+                    </form>`,
+                    '<a href="/create">create</a>');
+    
+                response.writeHead(200);
+                response.end(html);
+            });
         });
     } else if(pathname === '/create_process'){
         var body = '';
@@ -87,7 +91,7 @@ var app = http.createServer(function(request,response){
             var description = post.description;
             
             db.query(`INSERT INTO topic (title, description, created, author_id) VALUES(?, ?, NOW(), ?)`,
-                [post.title, post.description, 1], function(error, result) {
+                [post.title, post.description, post.author], function(error, result) {
                 if (error) throw error;
 
                 response.writeHead(302, {Location: `/?id=${result.insertId}`});
