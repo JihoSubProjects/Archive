@@ -20,7 +20,6 @@ module.exports = {
         var i = 0;
         while(i < topics.length){
         list = list + `<li><a href="/?id=${topics[i].id}">${topics[i].title}</a></li>`;
-        console.log(topics[i].title)
         i = i + 1;
         }
         list = list + '</ul>';
