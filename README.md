@@ -10,7 +10,7 @@
 2. WEB2 - Node.js
 - [인프런 강의](https://inf.run/aaoD)
 
-3. WEB2
+3. WEB2 - Home server
 - [인프런 강의](https://inf.run/nHbu)
 
 4. WEB2 - Node.js - MySQL

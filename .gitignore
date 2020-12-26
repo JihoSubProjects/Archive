@@ -2,6 +2,3 @@
 node_modules/
 package-lock.json
 package.json
-
-# secret
-EGOING/WEB2/NODEJS-MYSQL/nodejs/mysql.js
