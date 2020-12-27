@@ -4,6 +4,8 @@ var qs = require('querystring');
 var db = require('./db');
 var template = require('./template');
 
+var sanitizeHtml = require('sanitize-html');
+
 exports.home = function(request, response) {
     db.query(`SELECT * FROM topic`, function(error, topics) {
         var title = 'Welcome';
@@ -33,7 +35,7 @@ exports.page = function(request, response) {
             var description = topic[0].description;
             var list = template.list(topics);
             var html = template.HTML(title, list,
-                `<h2>${title}</h2><p>${description}</p><p>by ${topic[0].name}</p>`,
+                `<h2>${sanitizeHtml(title)}</h2><p>${sanitizeHtml(description)}</p><p>by ${sanitizeHtml(topic[0].name)}</p>`,
                 `<a href="/create">create</a> <a href="/update?id=${queryData.id}">update</a>
                 <form action="delete_process" method="post">
                     <input type="hidden" name="id" value="${queryData.id}">
@@ -94,23 +96,20 @@ exports.update = function(request, response) {
     var queryData = url.parse(_url, true).query;
 
     db.query(`SELECT * FROM topic`, function(error, topics) {
-    // fs.readdir('./data', function(error, filelist){
-    //    var filteredId = path.parse(queryData.id).base;
         if (error) throw error;
 
         db.query(`SELECT * FROM topic WHERE id=?`, [queryData.id], function(error2, topic) {
-        // fs.readFile(`data/${filteredId}`, 'utf8', function(err, description){
             if (error2) throw error2;
 
             db.query('SELECT * FROM author', function(error3, authors) {
                 if (error3) throw error3;
 
                 var list = template.list(topics);
-                var html = template.HTML(topic[0].title, list, `
+                var html = template.HTML(sanitizeHtml(topic[0].title), list, `
                     <form action="/update_process" method="post">
                         <input type="hidden" name="id" value="${topic[0].id}">
-                        <p><input type="text" name="title" placeholder="title" value="${topic[0].title}"></p>
-                        <p><textarea name="description" placeholder="description">${topic[0].description}</textarea></p>
+                        <p><input type="text" name="title" placeholder="title" value="${sanitizeHtml(topic[0].title)}"></p>
+                        <p><textarea name="description" placeholder="description">${sanitizeHtml(topic[0].description)}</textarea></p>
                         <p>${template.authorSelect(authors, topic[0].author_id)}</p>
                         <p><input type="submit"></p>
                     </form>`,
