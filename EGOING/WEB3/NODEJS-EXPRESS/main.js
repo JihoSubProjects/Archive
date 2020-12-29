@@ -1,17 +1,19 @@
 var fs = require('fs');
-var qs = require('querystring');
+// var qs = require('querystring');
 
 var path = require('path');
 
 var sanitizeHtml = require('sanitize-html');
 var express      = require('express');
 var bodyParser   = require('body-parser');
+var compression  = require('compression');
 
 var template = require('./lib/template.js');
 
 var app = express();
 
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(compression());
 
 // route, routing
 // app.get('/', (req, res) => res.send('Hello World!'))
