@@ -1,14 +1,17 @@
-var fs = require('fs')
+var fs = require('fs');
 var qs = require('querystring');
 
-var path = require('path')
+var path = require('path');
 
-var sanitizeHtml = require('sanitize-html')
-var express = require('express')
+var sanitizeHtml = require('sanitize-html');
+var express      = require('express');
+var bodyParser   = require('body-parser');
 
-var template = require('./lib/template.js')
+var template = require('./lib/template.js');
 
-var app = express()
+var app = express();
+
+app.use(bodyParser.urlencoded({ extended: false }));
 
 // route, routing
 // app.get('/', (req, res) => res.send('Hello World!'))
@@ -53,7 +56,7 @@ app.get('/create', function(request, response) {
     fs.readdir('./data', function(error, filelist) {
         var title   = 'WEB - create';
         var list    = template.list(filelist);
-        var body    = ` <form action="/create_process" method="post">
+        var body    =  `<form action="/create_process" method="post">
                             <p><input type="text" name="title" placeholder="title"></p>
                             <p><textarea name="description" placeholder="description"></textarea></p>
                             <p><input type="submit" value="create"></p>
@@ -66,7 +69,14 @@ app.get('/create', function(request, response) {
 })
 
 app.post('/create_process', function(request, response) {
-    var body = ''
+    var post        = request.body; // body-parser 사용
+    var title       = post.title;
+    var description = post.description;
+
+    // redirect 간소화
+    fs.writeFile(`data/${title}`, description, 'utf8', function(err) { response.redirect(`/page/${title}`) })
+
+    /* var body = ''
     request.on('data', function(data) { body += data })
     request.on('end', function() {
         var post        = qs.parse(body)
@@ -75,7 +85,7 @@ app.post('/create_process', function(request, response) {
 
         // redirect 간소화
         fs.writeFile(`data/${title}`, description, 'utf8', function(err) { response.redirect(`/page/${title}`) })
-    })
+    }) */
 })
 
 app.get('/update/:pageId', function(request, response) {
@@ -85,7 +95,7 @@ app.get('/update/:pageId', function(request, response) {
         fs.readFile(`data/${filteredId}`, 'utf8', function(err, description) {
             var title   = request.params.pageId;
             var list    = template.list(filelist);
-            var body    = ` <form action="/update_process" method="post">
+            var body    =  `<form action="/update_process" method="post">
                                 <input type="hidden" name="id" value="${title}">
                                 <p><input type="text" name="title" placeholder="title" value="${title}"></p>
                                 <p><textarea name="description" placeholder="description">${description}</textarea></p>
@@ -100,7 +110,19 @@ app.get('/update/:pageId', function(request, response) {
 })
 
 app.post('/update_process', function(request, response) {
-    var body = ''
+    var post        = request.body; // body-parser 사용
+    var id          = post.id
+    var title       = post.title
+    var description = post.description
+
+    // redirect 간소화
+    fs.rename(`data/${id}`, `data/${title}`, function(error) {
+        fs.writeFile(`data/${title}`, description, 'utf8', function(err) {
+            response.redirect(`/page/${title}`)
+        })
+    })
+
+    /* var body = ''
     request.on('data', function(data) { body += data })
     request.on('end', function() {
         var post        = qs.parse(body)
@@ -114,11 +136,18 @@ app.post('/update_process', function(request, response) {
                 response.redirect(`/page/${title}`)
             })
         })
-    })
+    }) */
 })
 
 app.post('/delete_process', function(request, response) {
-    var body = ''
+    var post        = request.body; // body-parser 사용
+    var id         = post.id
+    var filteredId = path.parse(id).base
+
+    // redirect 간소화 -> express 쓰면 편하다. 이게 프레임워크의 장점.
+    fs.unlink(`data/${filteredId}`, function(error) { response.redirect('/') })
+
+    /* var body = ''
     request.on('data', function(data) { body += data })
     request.on('end', function() {
         var post       = qs.parse(body)
@@ -127,46 +156,10 @@ app.post('/delete_process', function(request, response) {
 
         // redirect 간소화 -> express 쓰면 편하다. 이게 프레임워크의 장점.
         fs.unlink(`data/${filteredId}`, function(error) { response.redirect('/') })
-    })
+    }) */
 })
 
 // app.listen(3000, () => console.log('Example app listening on port 3000'))
 app.listen(3000, function() {
-    console.log('Example app listening on port 3000')
+    // console.log('Example app listening on port 3000')
 })
-
-/* var http = require('http');
-var fs = require('fs');
-var url = require('url');
-var qs = require('querystring');
-var template = require('./lib/template.js');
-var path = require('path');
-var sanitizeHtml = require('sanitize-html');
-
-var app = http.createServer(function(request,response){
-    var _url = request.url;
-    var queryData = url.parse(_url, true).query;
-    var pathname = url.parse(_url, true).pathname;
-    if(pathname === '/'){
-        if(queryData.id === undefined){
-        
-        } else {
-        
-        }
-    } else if(pathname === '/create'){
-        
-    } else if(pathname === '/create_process'){
-        
-    } else if(pathname === '/update'){
-        
-    } else if(pathname === '/update_process'){
-        
-    } else if(pathname === '/delete_process'){
-        
-    } else {
-        response.writeHead(404);
-        response.end('Not found');
-    }
-    });
-    app.listen(3000);
- */
