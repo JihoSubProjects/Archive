@@ -1,5 +1,5 @@
 module.exports = {
-    HTML: function(title, list, body, control) {
+    HTML: function(title, list, control, body) {
         return `
             <!doctype html>
             <html>
