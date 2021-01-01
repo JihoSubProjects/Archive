@@ -12,10 +12,12 @@ var template = require('./lib/template.js');
 
 var app = express();
 
+app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(compression());
 
 // 임의로 만든 미들웨어
+// .get으로 사용하면 get방식으로 들어온 때만 반응한다. use를 쓰면 c/u/d_process에서도 반응하므로 낭비가 심하다.
 app.get('*', function(request, response, next) {
     fs.readdir('./data', function(error, filelist) {
         request.list = filelist;
@@ -31,7 +33,8 @@ app.get('/', function(request, response) {
     var description = 'Hello, Node.js';
     var list        = template.list(request.list);
     var control     = `<a href="/create">create</a>`;
-    var body        = `<h2>${title}</h2>${description}`;
+    var body        =  `<h2>${title}</h2>${description}
+                        <img src="/images/hello.jpg" style="width:300px; display:block; margin-top:10px;">`;
 
     var html = template.HTML(title, list, control, body);
     response.send(html);
