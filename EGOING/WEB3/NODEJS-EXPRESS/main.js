@@ -41,25 +41,28 @@ app.get('/', function(request, response) {
 })
 
 // url parameter를 어떻게 분석하는지 ':pageId'
-app.get('/page/:pageId', function(request, response) {
+app.get('/page/:pageId', function(request, response, next) {
     var filteredId = path.parse(request.params.pageId).base;
 
-    fs.readFile(`data/${filteredId}`, 'utf8', function(err, description){
-        var title                = request.params.pageId;
-        var sanitizedTitle       = sanitizeHtml(title);
-        var sanitizedDescription = sanitizeHtml(description, { allowedTags: ['h1'] });
-        var list                 = template.list(request.list);
-        var control              = `<a href="/create">create</a> <a href="/update/${sanitizedTitle}">update</a>
-                                    <form action="/delete_process" method="post">
-                                        <input type="hidden" name="id" value="${sanitizedTitle}">
-                                        <input type="submit" value="delete">
-                                    </form>`;
-        var body                 = `<h2>${sanitizedTitle}</h2>${sanitizedDescription}`;
-
-        var html = template.HTML(title, list, control, body);
-        response.send(html)
-    })
-})
+    fs.readFile(`data/${filteredId}`, 'utf8', function(err, description) {
+        if (err) { next(err); }
+        else {
+            var title                = request.params.pageId;
+            var sanitizedTitle       = sanitizeHtml(title);
+            var sanitizedDescription = sanitizeHtml(description, { allowedTags: ['h1'] });
+            var list                 = template.list(request.list);
+            var control              = `<a href="/create">create</a> <a href="/update/${sanitizedTitle}">update</a>
+                                        <form action="/delete_process" method="post">
+                                            <input type="hidden" name="id" value="${sanitizedTitle}">
+                                            <input type="submit" value="delete">
+                                        </form>`;
+            var body                 = `<h2>${sanitizedTitle}</h2>${sanitizedDescription}`;
+    
+            var html = template.HTML(title, list, control, body);
+            response.send(html);
+        }
+    });
+});
 
 app.get('/create', function(request, response) {
     var title   = 'WEB - create';
@@ -123,6 +126,16 @@ app.post('/delete_process', function(request, response) {
     // redirect 간소화 -> express 쓰면 편하다. 이게 프레임워크의 장점.
     fs.unlink(`data/${filteredId}`, function(error) { response.redirect('/') })
 })
+
+app.use(function(req, res, next) {
+    res.status(404).send('Sorry cant find that!');
+});
+
+// 404보다 먼저 오면 안 됨
+app.use(function(err, req, res, next) {
+    console.log(err.stack);
+    res.status(500).send('Something broke!');
+});
 
 // app.listen(3000, () => console.log('Example app listening on port 3000'))
 app.listen(3000, function() {})
