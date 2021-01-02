@@ -1,8 +1,9 @@
 var fs = require('fs');
 
-var express      = require('express');
-var bodyParser   = require('body-parser');
-var compression  = require('compression');
+var express     = require('express');
+var bodyParser  = require('body-parser');
+var compression = require('compression');
+var helmet      = require('helmet');        // 웬만한 보안 관련 이슈들을 해결해주는 모듈
 
 var indexRouter = require('./routes/index');
 var topicRouter = require('./routes/topic');
@@ -12,6 +13,7 @@ var app = express();
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(compression());
+app.use(helmet());
 
 // 임의로 만든 미들웨어
 // .get으로 사용하면 get방식으로 들어온 때만 반응한다. use를 쓰면 c/u/d_process에서도 반응하므로 낭비가 심하다.
