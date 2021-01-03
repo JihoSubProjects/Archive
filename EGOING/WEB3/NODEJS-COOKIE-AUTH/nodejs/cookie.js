@@ -14,7 +14,9 @@ http.createServer(function(request, response) {
         'Set-Cookie':[
             'yummy_cookie=choco',
             'tasty_cookie=strawberry',
-            `Permanent=cookies; Max-age=${60*60*24*30}` // 30일 동안 살아있는 Permanent Cookie
+            `Permanent=cookies; Max-age=${60*60*24*30}`, // 30일 동안 살아있는 Permanent Cookie
+            'Secure=Secure; Secure', // HTTPS 방식에서만 사용할 수 있는 쿠키
+            'HttpOnly=HttpOnly; HttpOnly'
         ]
     });
 
