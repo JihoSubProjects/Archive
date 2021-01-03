@@ -11,8 +11,12 @@ http.createServer(function(request, response) {
     console.log(cookies); // { yummy_cookie: 'choco', tasty_cookie: 'strawberry' }
 
     response.writeHead(200, {
-        'Set-Cookie':['yummy_cookie=choco', 'tasty_cookie=strawberry']
+        'Set-Cookie':[
+            'yummy_cookie=choco',
+            'tasty_cookie=strawberry',
+            `Permanent=cookies; Max-age=${60*60*24*30}` // 30일 동안 살아있는 Permanent Cookie
+        ]
     });
-    
+
     response.end('Cookie!!');
 }).listen(3000);
