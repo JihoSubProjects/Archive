@@ -1,28 +1,27 @@
 module.exports = {
-  HTML:function(title, list, body, control){
-    return `
-    <!doctype html>
-    <html>
-    <head>
-      <title>WEB1 - ${title}</title>
-      <meta charset="utf-8">
-    </head>
-    <body>
-      <h1><a href="/">WEB</a></h1>
-      ${list}
-      ${control}
-      ${body}
-    </body>
-    </html>
-    `;
-  },list:function(filelist){
-    var list = '<ul>';
-    var i = 0;
-    while(i < filelist.length){
-      list = list + `<li><a href="/?id=${filelist[i]}">${filelist[i]}</a></li>`;
-      i = i + 1;
+    HTML:function(title, list, control, body) {
+        return `<!doctype html>
+                <html>
+                <head>
+                    <title>WEB1 - ${title}</title>
+                    <meta charset="utf-8">
+                </head>
+                <body>
+                    <a href="/login">login</a>
+                    <h1><a href="/">WEB</a></h1>
+                    ${list}
+                    ${control}
+                    ${body}
+                </body>
+                </html>`;
+    },list:function(filelist){
+        var list = '<ul>';
+        var i = 0;
+        while (i < filelist.length) {
+            list = list + `<li><a href="/?id=${filelist[i]}">${filelist[i]}</a></li>`;
+            i++;
+        }
+        list += '</ul>';
+        return list;
     }
-    list = list+'</ul>';
-    return list;
-  }
 }
