@@ -18,18 +18,27 @@ function authIsOwner(request, response) {
         cookies = cookie.parse(request.headers.cookie);
     }
 
-    if (post.email === 'jiho@kakao.com' && post.password === '123456') {
+    if (cookies.email === 'jiho@kakao.com' && cookies.password === '123456') {
         isOwner = true;
     }
 
     return isOwner;
 }
 
+function authStatusUI(request, response) {
+    var authStatusUI = '<a href="/login">login</a>';
+
+    if (authIsOwner(request, response)) {
+        authStatusUI = '<a href="/logout_process">logout</a>';
+    }
+
+    return authStatusUI;
+}
+
 var app = http.createServer(function(request, response) {
-    var _url      = request.url;
-    var queryData = url.parse(_url, true).query;
-    var pathname  = url.parse(_url, true).pathname;
-    var isOwner   = authIsOwner(request, response);
+    var _url         = request.url;
+    var queryData    = url.parse(_url, true).query;
+    var pathname     = url.parse(_url, true).pathname;
 
     if (pathname === '/') {
         if (queryData.id === undefined) {
@@ -39,7 +48,7 @@ var app = http.createServer(function(request, response) {
                 var list        = template.list(filelist);
                 var control     = '<a href="/create">create</a>';
                 var body        = `<h2>${title}</h2>${description}`;
-                var html        = template.HTML(title, list, control, body);
+                var html        = template.HTML(title, list, control, body, authStatusUI(request, response));
 
                 response.writeHead(200);
                 response.end(html);
@@ -58,7 +67,7 @@ var app = http.createServer(function(request, response) {
                                                     <input type="submit" value="delete">
                                                 </form>`;
                     var body                 = `<h2>${sanitizedTitle}</h2>${sanitizedDescription}`;
-                    var html                 = template.HTML(sanitizedTitle, list, control, body);
+                    var html                 = template.HTML(title, list, control, body, authStatusUI(request, response));
 
                     response.writeHead(200);
                     response.end(html);
@@ -75,7 +84,7 @@ var app = http.createServer(function(request, response) {
                                 <p><textarea name="description" placeholder="description"></textarea></p>
                                 <p><input type="submit"></p>
                             </form>`;
-            var html    = template.HTML(title, list, control, body);
+            var html    = template.HTML(title, list, control, body, authStatusUI(request, response));
 
             response.writeHead(200);
             response.end(html);
@@ -98,23 +107,17 @@ var app = http.createServer(function(request, response) {
         fs.readdir('./data', function(error, filelist) {
             var filteredId = path.parse(queryData.id).base;
             fs.readFile(`data/${filteredId}`, 'utf8', function(err, description) {
-                var title = queryData.id;
-                var list = template.list(filelist);
-                var html = template.HTML(title, list,
-                    `
-                    <form action="/update_process" method="post">
-                    <input type="hidden" name="id" value="${title}">
-                    <p><input type="text" name="title" placeholder="title" value="${title}"></p>
-                    <p>
-                        <textarea name="description" placeholder="description">${description}</textarea>
-                    </p>
-                    <p>
-                        <input type="submit">
-                    </p>
-                    </form>
-                    `,
-                    `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`
-                );
+                var title   = queryData.id;
+                var list    = template.list(filelist);
+                var control = `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`;
+                var body    =  `<form action="/update_process" method="post">
+                                    <input type="hidden" name="id" value="${title}">
+                                    <p><input type="text" name="title" placeholder="title" value="${title}"></p>
+                                    <p><textarea name="description" placeholder="description">${description}</textarea></p>
+                                    <p><input type="submit"></p>
+                                </form>`;
+                var html    = template.HTML(title, list, control, body, authStatusUI(request, response));
+                
                 response.writeHead(200);
                 response.end(html);
             });
@@ -160,7 +163,7 @@ var app = http.createServer(function(request, response) {
                                     <p><input type="password" name="password" placeholder="password"></p>
                                     <p><input type="submit" value="login"></p>
                                 </form>`;
-            var html        = template.HTML(title, list, control, body);
+            var html        = template.HTML(title, list, control, body, authStatusUI(request, response));
 
             response.writeHead(200);
             response.end(html);
@@ -186,6 +189,17 @@ var app = http.createServer(function(request, response) {
                 response.end('Who?');
             }
         });
+    } else if ('/logout_process') {
+        var post = qs.parse(body);
+
+        response.writeHead(302, {
+            'Set-Cookie':[
+                'email=   ; Max-Age=0',
+                'password=; Max-Age=0',
+                'nickname=; Max-Age=0'
+            ], Location:`/`
+        });
+        response.end();
     } else {
         response.writeHead(404);
         response.end('Not found');
